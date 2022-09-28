@@ -1,7 +1,9 @@
 # diabetes-dementia-simulation
 
-#+TITLE: (working title) Longitudinal causal analysis of second-line diabetes drugs on dementia risk: a national registry study
-#+Author: Nerissa Nance, Andrew Mertens, & Thomas Alexander Gerds
+#TITLE: (working title) 
+Longitudinal causal analysis of second-line diabetes drugs on dementia risk: a national registry study
+#Authors: 
+Nerissa Nance, Andrew Mertens, & Thomas Alexander Gerds
 
 
 * Introduction
