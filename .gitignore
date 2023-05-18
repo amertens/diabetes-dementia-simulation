@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+data/simulated_data_list.RDS
+data/simulated_data_list_null.RDS

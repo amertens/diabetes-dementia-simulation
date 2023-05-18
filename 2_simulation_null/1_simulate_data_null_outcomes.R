@@ -3,8 +3,8 @@
 rm(list=ls())
 library(lava)
 library(data.table)
-source(paste0(here::here(),"/synthesizeDD.R"))
-source(paste0(here::here(),"/simulation study/0_simulation_functions.R"))
+source(paste0(here::here(),"/functions/0_synthesizeDD.R"))
+source(paste0(here::here(),"/functions/0_simulation_functions.R"))
 
 
 sim_list <- readRDS(paste0(here::here(),"/data/simulated_data_list.RDS"))
@@ -21,4 +21,4 @@ for(i in 1:length(sim_list)){
   sim_list_null[[i]] <- d
 }
 
-saveRDS(sim_list_null, paste0(here::here(),"/data/simulated_data_list_old_null.RDS"))
+saveRDS(sim_list_null, paste0(here::here(),"/data/simulated_data_list_null.RDS"))
