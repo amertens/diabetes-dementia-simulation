@@ -13,9 +13,9 @@
 # trueRR=0.3930283
 # trueRD=-0.035852
 
-calc_sim_performance <- function(files, boot_iter_files=NULL, trueRR, trueRD, iptw=F){
+calc_sim_performance <- function(files, filepath, boot_iter_files=NULL, trueRD, iptw=F){
 
-  setwd(paste0(here::here(),"/sim_res/"))
+  setwd(paste0(here::here(),filepath))
   d <- files %>% map(readRDS) %>% map_dfr(~bind_rows(.) , .id="analysis")
   d <- d %>% mutate(analysis = factor(analysis))
   levels(d$analysis) = files[as.numeric(levels(d$analysis))]
@@ -36,29 +36,7 @@ calc_sim_performance <- function(files, boot_iter_files=NULL, trueRR, trueRD, ip
     d <- bind_rows(d, d.iptw)
   }
 
-  d$true.RR <- trueRR
   d$true.RD <- trueRD
-
-  # head(d)
-  perf_tab_RR <- d %>% group_by(analysis) %>%
-    mutate(variance=mean(((estimate)-mean((estimate)))^2),
-           o.ci.lb = (estimate) - 1.96 * sqrt(variance),
-           o.ci.ub = (estimate) + 1.96 * sqrt(variance)) %>%
-    group_by(analysis) %>%
-    summarize(
-      bias=mean(log(estimate))-log(true.RR),
-      variance=mean((mean(log(estimate))-log(estimate))^2),
-      mse = bias^2 + variance,
-      bias_se_ratio= bias/sqrt(variance),
-      bias_se_ratio_emp= bias/mean(std.dev),
-      coverage=mean(CI.2.5.<=true.RR & true.RR<=CI.97.5.)*100,
-      #oracle coverage
-      o.coverage=mean(o.ci.lb<=(true.RR) & (true.RR)<= o.ci.ub)*100,
-      mean_ci_width=mean(log(CI.97.5.)-log(CI.2.5.)),
-      power=mean((CI.2.5. > 1 & CI.97.5.>1)|(CI.2.5. < 1 & CI.97.5.<1))*100
-    ) %>% filter(!is.na(variance)) %>%
-    distinct()
-
 
   perf_tab_diff <- d %>% filter(!is.na(ate)) %>%
     subset(., select = -c(estimate, std.dev, CI.2.5., CI.97.5.)) %>%
@@ -84,7 +62,7 @@ calc_sim_performance <- function(files, boot_iter_files=NULL, trueRR, trueRD, ip
     distinct()
 
   if(!is.null(boot_iter_files)){
-    setwd(paste0(here::here(),"/data/bootstrap/"))
+    setwd(paste0(here::here(),filepath,"/bootstrap/"))
 
     if( class(boot_iter_files) == "data.frame"){
       boot_iter_files$boot_iter <- as.character(1:nrow(boot_iter_files))
@@ -117,12 +95,6 @@ calc_sim_performance <- function(files, boot_iter_files=NULL, trueRR, trueRD, ip
           ate.CI2=quantile(ate,.975)
         )
 
-      perf_tab_RR_boot <- boot_CIs %>% group_by(analysis) %>%
-        summarize(
-          coverage = mean(CI1 <= d$true.RR[1] &  CI2 >= d$true.RR[1])*100,
-          mean_ci_width=mean(log(CI2)-log(CI1)),
-          power=mean((CI1 > 1 & CI2>1)|(CI1 < 1 & CI2<1))*100
-        ) %>% as.data.frame()
 
       perf_tab_diff_boot <- boot_CIs %>% group_by(analysis) %>%
         summarize(
@@ -134,8 +106,6 @@ calc_sim_performance <- function(files, boot_iter_files=NULL, trueRR, trueRD, ip
     }else{
       boot_CIs <- boot_res %>% group_by(iteration) %>%
         summarise(
-          CI1=quantile(estimate,.025),
-          CI2=quantile(estimate,.975),
           ate.CI1=quantile(ate,.025),
           ate.CI2=quantile(ate,.975)
         )
@@ -143,13 +113,6 @@ calc_sim_performance <- function(files, boot_iter_files=NULL, trueRR, trueRD, ip
 
 
       #calculate bootstrap performance
-      perf_tab_RR_boot <- data.frame(
-        coverage = mean(boot_CIs$CI1 <= d$true.RR[1] &  boot_CIs$CI2 >= d$true.RR[1])*100,
-        mean_ci_width_logRR=mean(log(boot_CIs$CI2)-log(boot_CIs$CI1)),
-        power=mean((boot_CIs$CI1 > 1 & boot_CIs$CI2>1)|(boot_CIs$CI1 < 1 & boot_CIs$CI2<1))*100
-      )
-      perf_tab_RR_boot
-
       perf_tab_diff_boot <- data.frame(
         coverage = mean(boot_CIs$ate.CI1 <= d$true.RD[1] &  boot_CIs$ate.CI2 >= d$true.RD[1])*100,
         mean_ci_width=mean((boot_CIs$ate.CI2)-(boot_CIs$ate.CI1)),
@@ -157,19 +120,15 @@ calc_sim_performance <- function(files, boot_iter_files=NULL, trueRR, trueRD, ip
       )
     }
 
-    perf_tab_RR <- bind_rows(perf_tab_RR, perf_tab_RR_boot)
     perf_tab_diff <- bind_rows(perf_tab_diff, perf_tab_diff_boot)
   }
 
-  #perf_tab_diff <- perf_tab_diff %>% filter(!grepl("iptw",analysis))
 
-  perf_tab_RR <- clean_sim_results(perf_tab_RR)
   perf_tab_diff <- clean_sim_results(perf_tab_diff)
 
-  perf_tab_RR$iptw <- ifelse(grepl("iptw", perf_tab_RR$filenames), "IPTW", "TMLE")
   perf_tab_diff$iptw <- ifelse(grepl("iptw", perf_tab_diff$filenames), "IPTW", "TMLE")
 
-  return(list(perf_tab_RR=perf_tab_RR, perf_tab_diff=perf_tab_diff))
+  return(perf_tab_diff)
 }
 
 
