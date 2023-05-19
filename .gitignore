@@ -1,4 +1,8 @@
 .Rproj.user
+.Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
+data/simulated_data_list.RDS
+data/simulated_data_list_null.RDS
+/.Rproj.user/CBFE9712/

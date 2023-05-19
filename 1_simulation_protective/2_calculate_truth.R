@@ -3,10 +3,10 @@
 
 
 rm(list=ls())
-source(here::here("0_config.R"))
-source(paste0(here::here(),"/0_ltmle_Estimate_update.R"))
-source(paste0(here::here(),"/simulation study/0_simulation_functions.R"))
-source(paste0(here::here(),"/simulation study/0_simulation_cleaning_functions.R"))
+source(paste0(here::here(),"/0_config.R"))
+source(paste0(here::here(),"/functions/0_ltmle_Estimate_update.R"))
+source(paste0(here::here(),"/functions/0_simulation_functions.R"))
+source(paste0(here::here(),"/functions/0_simulation_cleaning_functions.R"))
 cc <- fread(paste0(here::here(),"/data/coefficients.txt"))
 
 
@@ -110,16 +110,8 @@ clean_sim_data <- function(d, N_time=10){
 
 
  seed <- 3457347
-<<<<<<< HEAD
- nsamp=5000000
- #nsamp=3000000
-=======
  nsamp=3000000
->>>>>>> 9bcd8fb1d0ef388de4572095e08ba27974129a76
 
-  set.seed(seed)
-  # u <- synthesizeDD(cc)
-  # d.full <- sim(u, nsamp)
 
   set.seed(seed)
   u.always <- synthesizeDD.always(cc)
@@ -131,16 +123,12 @@ clean_sim_data <- function(d, N_time=10){
 
   d.always <- d.always.full
   d.never <- d.never.full
-  N_time=10
-
 
   # #get deaths from the never on in case confounding by glp1 effect on comorbidities
-  # ddeath <- d.never.full %>% select(starts_with("event_death"))
-  # d.always.full <- d.always.full %>% select(!starts_with("event_death"))
-  # d.always.full <- bind_cols(d.always.full, ddeath)
+  ddeath <- d.never.full %>% select(starts_with("event_death"))
+  d.always.full <- d.always.full %>% select(!starts_with("event_death"))
+  d.always.full <- bind_cols(d.always.full, ddeath)
 
-
-  #d <- clean_sim_data(d.full, 10)
   d.always <- clean_sim_data(d.always.full, 10)
   d.never <- clean_sim_data(d.never.full, 10)
 
@@ -170,30 +158,4 @@ clean_sim_data <- function(d, N_time=10){
 truth_df <- data.frame(time=1:10, RR=c(tRR1,tRR2,tRR3,tRR4,tRR5,tRR6,tRR7,tRR8,tRR9,tRR10), RD=c(tRD1,tRD2,tRD3,tRD4,tRD5,tRD6,tRD7,tRD8,tRD9,tRD10))
 truth_df
 saveRDS(truth_df, file=paste0(here::here(),"/data/sim_res_truth.RDS"))
-
-
-
-
-  mean(d.always$event_dementia_1,na.rm=T)
-  mean(d.always$event_dementia_2,na.rm=T)
-  mean(d.always$event_dementia_3,na.rm=T)
-  mean(d.always$event_dementia_4,na.rm=T)
-  mean(d.always$event_dementia_5,na.rm=T)
-  mean(d.always$event_dementia_6,na.rm=T)
-  mean(d.always$event_dementia_7,na.rm=T)
-  mean(d.always$event_dementia_8,na.rm=T)
-  mean(d.always$event_dementia_9,na.rm=T)
-  mean(d.always$event_dementia_10,na.rm=T)
-
-
-  mean(d.never$event_dementia_1,na.rm=T)
-  mean(d.never$event_dementia_2,na.rm=T)
-  mean(d.never$event_dementia_3,na.rm=T)
-  mean(d.never$event_dementia_4,na.rm=T)
-  mean(d.never$event_dementia_5,na.rm=T)
-  mean(d.never$event_dementia_6,na.rm=T)
-  mean(d.never$event_dementia_7,na.rm=T)
-  mean(d.never$event_dementia_8,na.rm=T)
-  mean(d.never$event_dementia_9,na.rm=T)
-  mean(d.never$event_dementia_10,na.rm=T)
 

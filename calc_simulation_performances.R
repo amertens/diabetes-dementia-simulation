@@ -14,30 +14,15 @@ source(paste0(here::here(),"/simulation study/0_simulation_cleaning_functions.R"
 #---------------------------------------------------------
 # manuscript sim results: Null sim
 #---------------------------------------------------------
-files <- dir(path=paste0(here::here(),"/sim_res/"), pattern = "*.RDS")
-#files <- files[grepl("old_null_sim_res_",files)]
-files <- files[grepl("_null_",files)]
-files <- files[grepl("_T11",files)]
-
-#old_null_sim_res_ic_glm_T11
-#temp <- readRDS(paste0(here::here(),"/sim_res/sim_res_RF_ic_v3.RDS"))
-# head(temp)
-
-#NOTE: check which files are missing from the old pipeline:
-old_files <- dir(path=paste0(here::here(),"/sim_res_old/"), pattern = "*.RDS")
-old_files <- old_files[grepl("old_null_sim_res_",old_files)]
-old_files <- old_files[grepl("_T11",old_files)]
+files <- dir(path=paste0(here::here(),"/sim_res/null/"), pattern = "*.RDS")
 
 
-files_temp <- files[!(files %in% c( "" ))]
-old_files <- old_files[!(old_files %in% c( "" ))]
-files_temp <- gsub("_T11","", files_temp)
-old_files <- gsub("_T11","", old_files)
-files_temp <- gsub("old_null_sim_res_","", files_temp)
-old_files <- gsub("old_null_sim_res_","", old_files)
+# #NOTE: check which files are missing from the old pipeline:
+# old_files <- dir(path=paste0(here::here(),"/sim_res_old/"), pattern = "*.RDS")
+# old_files <- old_files[grepl("old_null_sim_res_",old_files)]
 
-files_temp[!(files_temp %in% old_files)]
-old_files[!(old_files %in% files_temp)]
+# files_temp[!(files_temp %in% old_files)]
+# old_files[!(old_files %in% files_temp)]
 
 
 #load bootstrap
@@ -113,8 +98,6 @@ table(boot_iter_files$analysis)
 
 
 
-temp <- readRDS(paste0(here::here(),"/data/sim_res_EN.RDS"))
-head(temp)
 
 
 
