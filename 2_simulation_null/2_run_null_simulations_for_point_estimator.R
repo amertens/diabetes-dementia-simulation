@@ -22,13 +22,13 @@ gc()
 
 
 #TEMP! No parallelization:
-resdf_noDetQ_ic_glm <- NULL
-for(i in 1:length(d_wide_list)){
-  res <- NULL
-  try(res <- run_ltmle_glmnet(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q=FALSE, varmethod = "ic",N_time=11, SL.library="glm"))
-  resdf_noDetQ_ic_glm <- bind_rows(resdf_noDetQ_ic_glm, res)
-}
-resdf_noDetQ_ic_glm
+# resdf_noDetQ_ic_glm <- NULL
+# for(i in 1:length(d_wide_list)){
+#   res <- NULL
+#   try(res <- run_ltmle_glmnet(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q=FALSE, varmethod = "ic",N_time=11, SL.library="glm"))
+#   resdf_noDetQ_ic_glm <- bind_rows(resdf_noDetQ_ic_glm, res)
+# }
+# resdf_noDetQ_ic_glm
 
 
 resdf_noDetQ_ic_glm <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
@@ -63,13 +63,30 @@ resdf_Qint_ic_glm <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', 
 saveRDS(resdf_Qint_ic_glm, paste0(here::here(),"/sim_res/null/sim_res_Qint_ic_glm.RDS"))
 
 
+#--------------------------------------------------------------------------
+# LASSO
+#--------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------
+# RIDGE
+#--------------------------------------------------------------------------
+
+
+#--------------------------------------------------------------------------
+# EN
+#--------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------
+# GLM, LASSO prescreen
+#--------------------------------------------------------------------------
+
 
 #--------------------------------------------------------------------------
 #Random forest
 #--------------------------------------------------------------------------
 int.start.time <- Sys.time()
 resdf_RF <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows') %dopar% {
-  res <- run_ltmle_glmnet(d_wide_list[[i]], varmethod = "ic", resdf=NULL, SL.library="SL.randomForest", N_time=11, override_function=SuperLearner_override_RF)
+  res <- run_ltmle_glmnet(d_wide_list[[i]], varmethod = "ic", resdf=NULL, SL.library="SL.randomForest", det.Q=F, N_time=11, override_function=SuperLearner_override_RF)
 }
 int.end.time <- Sys.time()
 difftime(int.end.time, int.start.time, units="mins")
@@ -78,6 +95,20 @@ resdf_RF
 gc()
 saveRDS(resdf_RF, paste0(here::here(),"/sim_res/null/sim_res_rf_ic.RDS"))
 
+int.start.time <- Sys.time()
+resdf_RF_detQ <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows') %dopar% {
+  res <- run_ltmle_glmnet(d_wide_list[[i]], varmethod = "ic", resdf=NULL, SL.library="SL.randomForest", det.Q=T, N_time=11, override_function=SuperLearner_override_RF)
+}
+int.end.time <- Sys.time()
+difftime(int.end.time, int.start.time, units="mins")
+gc()
+saveRDS(resdf_RF_detQ, paste0(here::here(),"/sim_res/null/sim_res_rf_ic.RDS"))
+
+#ADD Qint models
+
+
+
+###OTHER
 
 #Ridge
 int.start.time <- Sys.time()
