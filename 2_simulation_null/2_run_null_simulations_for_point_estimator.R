@@ -21,6 +21,16 @@ gc()
 #--------------------------------------------------------------------------
 
 
+#TEMP! No parallelization:
+resdf_noDetQ_ic_glm <- NULL
+for(i in 1:length(d_wide_list)){
+  res <- NULL
+  try(res <- run_ltmle_glmnet(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q=FALSE, varmethod = "ic",N_time=11, SL.library="glm"))
+  resdf_noDetQ_ic_glm <- bind_rows(resdf_noDetQ_ic_glm, res)
+}
+resdf_noDetQ_ic_glm
+
+
 resdf_noDetQ_ic_glm <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
   res <- NULL
   try(res <- run_ltmle_glmnet(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q=FALSE, varmethod = "ic",N_time=11, SL.library="glm"))
