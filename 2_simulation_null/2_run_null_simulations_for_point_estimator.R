@@ -80,6 +80,36 @@ saveRDS(resdf_Qint_ic_glm, paste0(here::here(),"/sim_res/null/sim_res_Qint_ic_gl
 # GLM, LASSO prescreen
 #--------------------------------------------------------------------------
 
+#lasso prescreen
+resdf_noDetQ_lasso_prescreen <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
+  res <- NULL
+  try(res <- run_ltmle_glmnet(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q=FALSE, varmethod = "ic", override_function=SuperLearner_override_lasso_prescreen))
+  return(res)
+}
+saveRDS(resdf_noDetQ_lasso_prescreen, paste0(here::here(),"/sim_res/null/sim_res_noDetQ_lasso_prescreen.RDS"))
+
+resdf_lasso_prescreen <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
+  res <- NULL
+  try(res <- run_ltmle_glmnet(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q=TRUE, varmethod = "ic", override_function=SuperLearner_override_lasso_prescreen))
+  return(res)
+}
+saveRDS(resdf_lasso_prescreen, paste0(here::here(),"/sim_res/null/sim_res_lasso_prescreen.RDS"))
+
+resdf_Qint_noDetQ_lasso_prescreen <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
+  res <- NULL
+  try(res <- run_ltmle_glmnet(d_wide_list[[i]], resdf=NULL, Qint=TRUE, det.Q=FALSE, varmethod = "ic", override_function=SuperLearner_override_lasso_prescreen))
+  return(res)
+}
+saveRDS(resdf_Qint_noDetQ_lasso_prescreen, paste0(here::here(),"/sim_res/null/sim_res_Qint_noDetQ_lasso_prescreen.RDS"))
+
+resdf_Qint_lasso_prescreen <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
+  res <- NULL
+  try(res <- run_ltmle_glmnet(d_wide_list[[i]], resdf=NULL, Qint=TRUE, det.Q=TRUE, varmethod = "ic", override_function=SuperLearner_override_lasso_prescreen))
+  return(res)
+}
+saveRDS(resdf_Qint_lasso_prescreen, paste0(here::here(),"/sim_res/null/sim_res_Qint_lasso_prescreen.RDS"))
+
+
 
 #--------------------------------------------------------------------------
 #Random forest
