@@ -11,7 +11,7 @@ library(doParallel)
 registerDoParallel(cores=64)
 
 gc()
-d_wide_list <- readRDS(file=here("data/simulated_data_no_death_list"))
+d_wide_list <- readRDS(file=here("data/simulated_data_no_death_list.RDS"))
 d_wide_list <- d_wide_list[1:200]
 gc()
 
@@ -22,14 +22,14 @@ Qint=FALSE
 det.Q =TRUE
 varmethod = "ic"
 
-try(res <- run_ltmle_glmnet_no_death(d_wide_list[[1]], resdf=NULL, Qint=FALSE, det.Q =TRUE, varmethod = "ic"))
+try(res <- run_ltmle_glmnet_no_death(d_wide_list[[1]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "ic"))
 
 
 #lasso
 int.start.time <- Sys.time()
 resdf_DetQ_ic <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
   res <- NULL
-  try(res <- run_ltmle_glmnet_no_death(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q =TRUE, varmethod = "ic"))
+  try(res <- run_ltmle_glmnet_no_death(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "ic"))
   return(res)
 }
 int.end.time <- Sys.time()
@@ -39,7 +39,7 @@ saveRDS(resdf_DetQ_ic, paste0(here::here(),"/sim_res/no_death/sim_res_ic.RDS"))
 int.start.time <- Sys.time()
 resdf_DetQ_ic <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
   res <- NULL
-  try(res <- run_ltmle_glmnet_no_death(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q =TRUE, varmethod = "tmle"))
+  try(res <- run_ltmle_glmnet_no_death(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "tmle"))
   return(res)
 }
 int.end.time <- Sys.time()
