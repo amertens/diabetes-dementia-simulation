@@ -4,6 +4,23 @@ library(data.table)
 library(tidyverse)
 
 
+clean_sim_data_no_death <- function(d, N_time){
+
+  #d <- as.data.frame(sapply(d, as.numeric))
+  #d[is.na(d)] <- 0 #Missingness due to censoring should be coded 0 as long as censoring variable is equal to 1.
+  d<- data.table(d)
+
+  for(i in 1:(N_time+1)){
+    j=i+1
+    d[get(paste0("event_dementia_",i))==1, (paste0("event_dementia_",j)):=1]
+  }
+
+  dementia.nodes<- grep("event_dementia_",names(d))
+  d[, sum_dementia :=rowSums(.SD,na.rm=T), .SDcols = dementia.nodes]
+  return(d)
+}
+
+
 
 spec_analysis_sim_no_death <- function(data, long_covariates, baseline_vars, N_time, Avars=c("glp1_"), Yvars=c("event_dementia_"), Cvars=NULL, alt=FALSE){
 
