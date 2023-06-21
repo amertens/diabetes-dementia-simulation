@@ -11,9 +11,10 @@ library(doParallel)
 registerDoParallel(cores=64)
 
 gc()
-d_wide_list <- readRDS(file=here("data/simulated_data_no_death_list"))
+d_wide_list <- readRDS(file=here("data/simulated_data_no_death_list.RDS"))
 d_wide_list <- d_wide_list[1:200]
 gc()
+
 
 
 d=d_wide_list[[1]]
