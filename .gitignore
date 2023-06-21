@@ -5,4 +5,5 @@
 .Ruserdata
 data/simulated_data_list.RDS
 data/simulated_data_list_null.RDS
+data/simulated_data_no_death_list_null.RDS
 /.Rproj.user/CBFE9712/
