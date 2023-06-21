@@ -17,13 +17,6 @@ source(paste0(here::here(),"/functions/0_simulation_cleaning_functions.R"))
 files <- dir(path=paste0(here::here(),"/sim_res/null/"), pattern = "*.RDS")
 
 
-# #NOTE: check which files are missing from the old pipeline:
-# old_files <- dir(path=paste0(here::here(),"/sim_res_old/"), pattern = "*.RDS")
-# old_files <- old_files[grepl("old_null_sim_res_",old_files)]
-
-# files_temp[!(files_temp %in% old_files)]
-# old_files[!(old_files %in% files_temp)]
-
 
 #load bootstrap
 boot_iter_files <- dir(path=paste0(here::here(),"/sim_res/null//bootstrap/"), pattern = "*.RDS")
@@ -53,7 +46,7 @@ files <- dir(path=paste0(here::here(),"/sim_res/protective/"), pattern = "*.RDS"
 boot_iter_files <- dir(path=paste0(here::here(),"/sim_res/bootstrap/protective/"), pattern = "*.RDS")
 
 truth <- readRDS(paste0(here::here(),"/data/sim_res_truth.RDS"))
-trueRD <- truth[10,2]
+trueRD <- truth[10,3]
 
 
 
