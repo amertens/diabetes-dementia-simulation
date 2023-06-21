@@ -8,7 +8,9 @@ source(paste0(here::here(),"/functions/0_ltmle_Estimate_update.R"))
 source(paste0(here::here(),"/functions/0_simulation_functions.R"))
 source(paste0(here::here(),"/functions/0_simulation_cleaning_functions.R"))
 cc <- fread(paste0(here::here(),"/data/coefficients.txt"))
+cc_no_death <- cc %>% filter(!grepl("event_death", var))
 
+u <- synthesizeDD(cc_no_death)
 
 
 synthesizeDD.always <- function(coefficients, A_name = "glp1"){
@@ -89,7 +91,6 @@ synthesizeDD.never <- function(coefficients, A_name = "glp1"){
 }
 
 
-#Dementia after death should be NA!
 
 clean_sim_data <- function(d, N_time=10){
 
@@ -99,8 +100,6 @@ clean_sim_data <- function(d, N_time=10){
     j=i+1
     d[is.na(get(paste0("event_dementia_",i))), (paste0("event_dementia_",j)):=NA]
     d[get(paste0("event_dementia_",i))==1, (paste0("event_dementia_",j)):=1]
-    d[get(paste0("event_death_",i))==1, (paste0("event_death_",j)):=1]
-    d[get(paste0("event_death_",i))==1, (paste0("event_dementia_",j)):=NA]
   }
   return(d)
 }
@@ -123,11 +122,6 @@ clean_sim_data <- function(d, N_time=10){
 
   d.always <- d.always.full
   d.never <- d.never.full
-
-  # #get deaths from the never on in case confounding by glp1 effect on comorbidities
-  ddeath <- d.never.full %>% select(starts_with("event_death"))
-  d.always.full <- d.always.full %>% select(!starts_with("event_death"))
-  d.always.full <- bind_cols(d.always.full, ddeath)
 
   d.always <- clean_sim_data(d.always.full, 10)
   d.never <- clean_sim_data(d.never.full, 10)
@@ -157,5 +151,5 @@ clean_sim_data <- function(d, N_time=10){
 
 truth_df <- data.frame(time=1:10, RR=c(tRR1,tRR2,tRR3,tRR4,tRR5,tRR6,tRR7,tRR8,tRR9,tRR10), RD=c(tRD1,tRD2,tRD3,tRD4,tRD5,tRD6,tRD7,tRD8,tRD9,tRD10))
 truth_df
-saveRDS(truth_df, file=paste0(here::here(),"/data/sim_res_truth.RDS"))
+saveRDS(truth_df, file=paste0(here::here(),"/data/sim_res_truth_no_death.RDS"))
 
