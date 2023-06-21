@@ -3,6 +3,8 @@ library(lava)
 library(data.table)
 library(tidyverse)
 
+
+
 spec_analysis_sim_no_death <- function(data, long_covariates, baseline_vars, N_time, Avars=c("glp1_"), Yvars=c("event_dementia_"), Cvars=NULL, alt=FALSE){
 
 
