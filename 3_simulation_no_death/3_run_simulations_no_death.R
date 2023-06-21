@@ -16,6 +16,15 @@ d_wide_list <- d_wide_list[1:200]
 gc()
 
 
+d=d_wide_list[[1]]
+resdf=NULL
+Qint=FALSE
+det.Q =TRUE
+varmethod = "ic"
+
+try(res <- run_ltmle_glmnet_no_death(d_wide_list[[1]], resdf=NULL, Qint=FALSE, det.Q =TRUE, varmethod = "ic"))
+
+
 #lasso
 int.start.time <- Sys.time()
 resdf_DetQ_ic <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {

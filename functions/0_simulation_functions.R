@@ -3,6 +3,67 @@ library(lava)
 library(data.table)
 library(tidyverse)
 
+spec_analysis_sim_no_death <- function(data, long_covariates, baseline_vars, N_time, Avars=c("glp1_"), Yvars=c("event_dementia_"), Cvars=NULL, alt=FALSE){
+
+
+  if(!alt){
+    node_names <- spec_nodes(baseline_vars=baseline_vars,
+                             longitudinal_vars=c(Avars,"censor_",long_covariates,Yvars),
+                             num_time=0:(N_time-1))
+  }else{
+    node_names <- spec_nodes(baseline_vars=baseline_vars,
+                             longitudinal_vars=c(Avars,"censor_",Yvars, long_covariates),
+                             num_time=0:(N_time-1))
+  }
+
+  # for(i in long_covariates){
+  #   node_names <- node_names[!grepl(paste0(i, (N_time-1)), node_names)]
+  # }
+  #Drop A_0
+  #node_names <- node_names[node_names!=paste0(Avars,"0")]
+
+  Lnode_names <- c(baseline_vars, expand.grid(long_covariates,0:(N_time-1)) %>% apply(1, function(row) paste0(row, collapse = "")))
+  Lnode_names <- gsub(" ","", Lnode_names)
+  # for(i in long_covariates){
+  #   Lnode_names <- Lnode_names[!grepl(paste0(i, (N_time-1)), Lnode_names)]
+  # }
+
+  #subset to analysis columns and arrange
+  d_ltmle <- data %>% dplyr::select(!!(node_names))
+  colnames(d_ltmle)
+
+  #clean censoring nodes to right format
+  Cnode_names = node_names[grep("^censor", node_names)]
+  for(i in Cnode_names){
+    d_ltmle[[i]] <- BinaryToCensoring(is.censored=d_ltmle[[i]])
+  }
+
+
+
+  d_ltmle <- d_ltmle %>% subset(., select = -c(censor_0, event_dementia_0))
+
+  if(!is.null(d_ltmle$id)){
+    d_ltmle <- d_ltmle %>% select(  id, ie_type,                      age_base,                     sex,                          code5txt,                     quartile_income,
+                                    insulin_0,                    any.malignancy_0,             chronic.pulmonary.disease_0,  hypertension_0,               myocardial.infarction_0,
+                                    ischemic.heart.disease_0,     heart.failure_0, renal.disease_0, sglt2_inhib_0, glp1_0,   everything())
+  }else{
+    d_ltmle <- d_ltmle %>% select( ie_type,                      age_base,                     sex,                          code5txt,                     quartile_income,
+                                   insulin_0,                    any.malignancy_0,             chronic.pulmonary.disease_0,  hypertension_0,               myocardial.infarction_0,
+                                   ischemic.heart.disease_0,     heart.failure_0, renal.disease_0, sglt2_inhib_0, glp1_0,   everything())
+  }
+
+
+
+  return(list(
+    data=d_ltmle,
+    node_names=node_names,
+    Anodes = node_names[sort(grep(paste("^",Avars, collapse="|", sep=""), node_names))],
+    Cnodes = Cnode_names,
+    Lnodes = Lnode_names,
+    Ynodes = node_names[sort(grep(paste("^",Yvars, collapse="|", sep=""), node_names))]
+  ))
+}
+
 run_ltmle_glmnet_no_death <- function(d,
          N_time = 11, #number of time points you want to look at
          SL.library = c("SL.glmnet"),
@@ -21,10 +82,13 @@ run_ltmle_glmnet_no_death <- function(d,
   options(warn=-1)
 
   #clean competing events
-  d <-clean_sim_data(d, N_time=N_time)
+  d <-clean_sim_data_no_death(d, N_time=N_time)
 
   if(!is.null(id)){
     baseline_vars <- c(baseline_vars,"id")
+  }else{
+    baseline_vars <- c(baseline_vars,"id")
+    d$id <- 1:nrow(d)
   }
 
   #Use only first N time points
@@ -32,7 +96,7 @@ run_ltmle_glmnet_no_death <- function(d,
     dplyr::select(!!(baseline_vars),matches(paste0("_(",paste0(0:(N_time-1),collapse="|"),")$")))
 
 
-  spec_ltmle <- spec_analysis_sim(data=d, c(long_covariates),
+  spec_ltmle <- spec_analysis_sim_no_death(data=d, c(long_covariates),
                                   baseline_vars, N_time,
                                   Avars=c("glp1_"),
                                   Yvars=c("event_dementia_"),
@@ -93,10 +157,10 @@ run_ltmle_glmnet_no_death <- function(d,
   if(glm){
 
     try(fit <- ltmle(data=spec_ltmle$data,
-                     Anodes = spec_ltmle$Anodes,
-                     Cnodes = spec_ltmle$Cnodes,
+                     Anodes = spec_ltmle$Anodes[spec_ltmle$Anodes!="glp1_0"],
+                     Cnodes = spec_ltmle$Cnodes[spec_ltmle$Cnodes!="censor_0"],
                      Lnodes = spec_ltmle$Lnodes,
-                     Ynodes = spec_ltmle$Ynodes,
+                     Ynodes = spec_ltmle$Ynodes[spec_ltmle$Ynodes!="event_dementia_0"],
                      gbound=gbound,
                      survivalOutcome = T,
                      abar = abar_spec,
