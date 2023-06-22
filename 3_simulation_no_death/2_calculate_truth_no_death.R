@@ -11,6 +11,9 @@ cc <- fread(paste0(here::here(),"/data/coefficients.txt"))
 cc_no_death <- cc %>% filter(!grepl("event_death", var))
 
 
+coefficients = cc_no_death
+A_name = "glp1"
+
 
 synthesizeDD.always <- function(coefficients, A_name = "glp1"){
   requireNamespace("lava")
@@ -107,8 +110,8 @@ clean_sim_data <- function(d, N_time=10){
 
 
 
- seed <- 3457347
- nsamp=3000000
+ seed <- 12345
+ nsamp=1000000
 
 
   set.seed(seed)
@@ -122,10 +125,6 @@ clean_sim_data <- function(d, N_time=10){
   d.always <- d.always.full
   d.never <- d.never.full
 
-  # #get deaths from the never on in case confounding by glp1 effect on comorbidities
-  ddeath <- d.never.full %>% select(starts_with("event_death"))
-  d.always.full <- d.always.full %>% select(!starts_with("event_death"))
-  d.always.full <- bind_cols(d.always.full, ddeath)
 
   d.always <- clean_sim_data(d.always.full, 10)
   d.never <- clean_sim_data(d.never.full, 10)

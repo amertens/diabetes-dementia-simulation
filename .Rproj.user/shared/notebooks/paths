@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-/home/andrew.mertens/diabetes-dementia-simulation/1_simulation_protective/1_simulate_data.R="E00DF178"
-/home/andrew.mertens/diabetes-dementia-simulation/1_simulation_protective/run_simulations_bootstrap_1000.R="605B8A89"
-/home/andrew.mertens/diabetes-dementia-simulation/3_simulation_no_death/3_run_simulations_no_death.R="5E72F612"
-/home/andrew.mertens/diabetes-dementia-simulation/3_simulation_no_death/4_run_simulations_no_death_bootstrap.R="A4BD1B33"
-=======
-/home/andrew.mertens/diabetes-dementia-simulation/1_simulation_protective/1_simulate_data.R="CB0A0FC7"
->>>>>>> 8227604add1669748456148ff405253d6b140b38
+C:/Users/andre/Documents/jici/diabetes-dementia-simulation/1_simulation_protective/2_calculate_truth.R="BB3CFE12"
+C:/Users/andre/Documents/jici/diabetes-dementia-simulation/1_simulation_protective/calculate_truth_function_dev.R="483AA6AD"
+C:/Users/andre/Documents/jici/diabetes-dementia-simulation/1_simulation_protective/simulation_results_protective.R="724A5400"
