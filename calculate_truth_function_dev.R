@@ -13,12 +13,15 @@ coefficients = cc
 A_name = "glp1"
 
 
-synthesize_truth <- function(coefficients, A_name = "glp1", A){
+synthesizeDD <- function(coefficients, A_name = "glp1", A=NULL){
   requireNamespace("lava")
   coefficients <- data.table(coefficients)
-  if(A!=1 & A!=0){stop()}
-  if(A==1){ coefficients$`(Intercept)`[grepl(A_name, coefficients$var)] <- 99999999999}
-  if(A==0){ coefficients$`(Intercept)`[grepl(A_name, coefficients$var)] <- -99999999999}
+
+  if(!is.null(A)){
+    if(A==1){ coefficients$`(Intercept)`[grepl(A_name, coefficients$var)] <- 99999999999}
+    if(A==0){ coefficients$`(Intercept)`[grepl(A_name, coefficients$var)] <- -99999999999}
+  }
+
 
   XNAMES <- names(coefficients)[-(1:3)]
   BETA <- coefficients[,-(1:3),with=0L]
