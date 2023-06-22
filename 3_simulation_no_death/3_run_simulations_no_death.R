@@ -17,13 +17,13 @@ gc()
 
 
 
-d=d_wide_list[[1]]
-resdf=NULL
-Qint=FALSE
-det.Q =TRUE
-varmethod = "ic"
-
-try(res <- run_ltmle_glmnet_no_death(d_wide_list[[1]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "ic"))
+# d=d_wide_list[[1]]
+# resdf=NULL
+# Qint=FALSE
+# det.Q =TRUE
+# varmethod = "ic"
+#
+# try(res <- run_ltmle_glmnet_no_death(d_wide_list[[1]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "ic"))
 
 
 #lasso

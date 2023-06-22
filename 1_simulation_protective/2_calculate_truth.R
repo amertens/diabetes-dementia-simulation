@@ -151,5 +151,5 @@ clean_sim_data <- function(d, N_time=10){
 
 truth_df <- data.frame(time=1:10, RR=c(tRR1,tRR2,tRR3,tRR4,tRR5,tRR6,tRR7,tRR8,tRR9,tRR10), RD=c(tRD1,tRD2,tRD3,tRD4,tRD5,tRD6,tRD7,tRD8,tRD9,tRD10))
 truth_df
-saveRDS(truth_df, file=paste0(here::here(),"/data/sim_res_truth_no_death.RDS"))
+saveRDS(truth_df, file=paste0(here::here(),"/data/sim_res_truth.RDS"))
 

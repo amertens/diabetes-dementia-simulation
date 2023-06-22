@@ -3,240 +3,6 @@ library(lava)
 library(data.table)
 library(tidyverse)
 
-
-clean_sim_data_no_death <- function(d, N_time){
-
-  #d <- as.data.frame(sapply(d, as.numeric))
-  #d[is.na(d)] <- 0 #Missingness due to censoring should be coded 0 as long as censoring variable is equal to 1.
-  d<- data.table(d)
-
-  for(i in 1:(N_time+1)){
-    j=i+1
-    d[get(paste0("event_dementia_",i))==1, (paste0("event_dementia_",j)):=1]
-  }
-
-  dementia.nodes<- grep("event_dementia_",names(d))
-  d[, sum_dementia :=rowSums(.SD,na.rm=T), .SDcols = dementia.nodes]
-  return(d)
-}
-
-
-
-spec_analysis_sim_no_death <- function(data, long_covariates, baseline_vars, N_time, Avars=c("glp1_"), Yvars=c("event_dementia_"), Cvars=NULL, alt=FALSE){
-
-
-  if(!alt){
-    node_names <- spec_nodes(baseline_vars=baseline_vars,
-                             longitudinal_vars=c(Avars,"censor_",long_covariates,Yvars),
-                             num_time=0:(N_time-1))
-  }else{
-    node_names <- spec_nodes(baseline_vars=baseline_vars,
-                             longitudinal_vars=c(Avars,"censor_",Yvars, long_covariates),
-                             num_time=0:(N_time-1))
-  }
-
-  # for(i in long_covariates){
-  #   node_names <- node_names[!grepl(paste0(i, (N_time-1)), node_names)]
-  # }
-  #Drop A_0
-  #node_names <- node_names[node_names!=paste0(Avars,"0")]
-
-  Lnode_names <- c(baseline_vars, expand.grid(long_covariates,0:(N_time-1)) %>% apply(1, function(row) paste0(row, collapse = "")))
-  Lnode_names <- gsub(" ","", Lnode_names)
-  # for(i in long_covariates){
-  #   Lnode_names <- Lnode_names[!grepl(paste0(i, (N_time-1)), Lnode_names)]
-  # }
-
-  #subset to analysis columns and arrange
-  d_ltmle <- data %>% dplyr::select(!!(node_names))
-  colnames(d_ltmle)
-
-  #clean censoring nodes to right format
-  Cnode_names = node_names[grep("^censor", node_names)]
-  for(i in Cnode_names){
-    d_ltmle[[i]] <- BinaryToCensoring(is.censored=d_ltmle[[i]])
-  }
-
-
-
-  d_ltmle <- d_ltmle %>% subset(., select = -c(censor_0, event_dementia_0))
-
-  if(!is.null(d_ltmle$id)){
-    d_ltmle <- d_ltmle %>% select(  id, ie_type,                      age_base,                     sex,                          code5txt,                     quartile_income,
-                                    insulin_0,                    any.malignancy_0,             chronic.pulmonary.disease_0,  hypertension_0,               myocardial.infarction_0,
-                                    ischemic.heart.disease_0,     heart.failure_0, renal.disease_0, sglt2_inhib_0, glp1_0,   everything())
-  }else{
-    d_ltmle <- d_ltmle %>% select( ie_type,                      age_base,                     sex,                          code5txt,                     quartile_income,
-                                   insulin_0,                    any.malignancy_0,             chronic.pulmonary.disease_0,  hypertension_0,               myocardial.infarction_0,
-                                   ischemic.heart.disease_0,     heart.failure_0, renal.disease_0, sglt2_inhib_0, glp1_0,   everything())
-  }
-
-
-
-  return(list(
-    data=d_ltmle,
-    node_names=node_names,
-    Anodes = node_names[sort(grep(paste("^",Avars, collapse="|", sep=""), node_names))],
-    Cnodes = Cnode_names,
-    Lnodes = Lnode_names,
-    Ynodes = node_names[sort(grep(paste("^",Yvars, collapse="|", sep=""), node_names))]
-  ))
-}
-
-run_ltmle_glmnet_no_death <- function(d,
-         N_time = 11, #number of time points you want to look at
-         SL.library = c("SL.glmnet"),
-         resdf=NULL,
-         Qint=F,
-         gcomp=F,
-         det.Q=T,
-         gbound = c(0.01, 1),
-         override_function=SuperLearner_override,
-         varmethod = "tmle", #variance method
-         label="",
-         glm=FALSE,
-         id=NULL){
-
-  warn = getOption("warn")
-  options(warn=-1)
-
-  #clean competing events
-  d <-clean_sim_data_no_death(d, N_time=N_time)
-
-  if(!is.null(id)){
-    baseline_vars <- c(baseline_vars,"id")
-  }else{
-    baseline_vars <- c(baseline_vars,"id")
-    d$id <- 1:nrow(d)
-  }
-
-  #Use only first N time points
-  d <- d %>%
-    dplyr::select(!!(baseline_vars),matches(paste0("_(",paste0(0:(N_time-1),collapse="|"),")$")))
-
-
-  spec_ltmle <- spec_analysis_sim_no_death(data=d, c(long_covariates),
-                                  baseline_vars, N_time,
-                                  Avars=c("glp1_"),
-                                  Yvars=c("event_dementia_"),
-                                  Cvars=c("censor_"))
-  abar_spec = list(rep(1,N_time-1),rep(0,N_time-1))
-  spec_ltmle$data <- spec_ltmle$data %>% select(ie_type,age_base,sex,code5txt,quartile_income,id, everything() )
-
-
-  set.seed(12345)
-  fit = NULL
-
-
-  if(Qint){
-
-    if(N_time==11){
-
-      qform = c(
-        insulin_0="Q.kplus1 ~ 1",
-        event_dementia_1="Q.kplus1 ~ 1",
-        event_dementia_2="Q.kplus1 ~ 1",
-        event_dementia_3="Q.kplus1 ~ 1",
-        event_dementia_4="Q.kplus1 ~ 1",
-        event_dementia_5="Q.kplus1 ~ 1",
-        event_dementia_6="Q.kplus1 ~ 1",
-        event_dementia_7="Q.kplus1 ~ 1",
-        event_dementia_8="Q.kplus1 ~ 1",
-        event_dementia_9="Q.kplus1 ~ 1",
-        event_dementia_10="Q.kplus1 ~ 1"
-      )
-    }
-    if(N_time==4){
-      qform = c(
-        insulin_0="Q.kplus1 ~ 1",
-        event_dementia_1="Q.kplus1 ~ 1",
-        event_dementia_2="Q.kplus1 ~ 1",
-        event_dementia_3="Q.kplus1 ~ 1")
-    }
-    if(N_time==2){
-      qform = c(
-        insulin_0="Q.kplus1 ~ 1",
-        event_dementia_1="Q.kplus1 ~ 1")
-    }
-  }else{
-    qform=NULL
-  }
-
-
-  if(det.Q){
-    det.q.fun = det.Q.function
-  }else{
-    det.q.fun = NULL
-  }
-
-  if(!is.null(id)){
-    id <- spec_ltmle$data[["id"]]
-  }
-
-  if(glm){
-
-    try(fit <- ltmle(data=spec_ltmle$data,
-                     Anodes = spec_ltmle$Anodes[spec_ltmle$Anodes!="glp1_0"],
-                     Cnodes = spec_ltmle$Cnodes[spec_ltmle$Cnodes!="censor_0"],
-                     Lnodes = spec_ltmle$Lnodes,
-                     Ynodes = spec_ltmle$Ynodes[spec_ltmle$Ynodes!="event_dementia_0"],
-                     gbound=gbound,
-                     survivalOutcome = T,
-                     abar = abar_spec,
-                     gcomp=gcomp,
-                     Qform = qform,
-                     estimate.time=F,
-                     deterministic.Q.function = det.q.fun,
-                     SL.library = "glm",
-                     variance.method = varmethod,
-                     id=id
-    ))
-
-  }else{
-    package_stub("SuperLearner", "SuperLearner", override_function, {
-      testthatsomemore::package_stub("ltmle", "Estimate", Estimate_override, {
-        try(fit <- ltmle(data=spec_ltmle$data,
-                         Anodes = spec_ltmle$Anodes[spec_ltmle$Anodes!="glp1_0"],
-                         Cnodes = spec_ltmle$Cnodes[spec_ltmle$Cnodes!="censor_0"],
-                         Lnodes = spec_ltmle$Lnodes,
-                         Ynodes = spec_ltmle$Ynodes[spec_ltmle$Ynodes!="event_dementia_0"],
-                         gbound=gbound,
-                         survivalOutcome = T,
-                         abar = abar_spec,
-                         gcomp=gcomp,
-                         Qform = qform,
-                         estimate.time=F,
-                         deterministic.Q.function = det.q.fun,
-                         SL.library = SL.library,
-                         variance.method = varmethod,
-                         id=id
-        ))
-      })})
-
-  }
-
-
-  if(!is.null(fit)){
-    res <- summary(fit)
-    res.iptw <- summary(fit, estimator="iptw")
-    res.RR <- as.data.frame(res$effect.measures$RR)
-    res.ate <- as.data.frame(res$effect.measures$ATE) %>% rename(ate.long.name=long.name,ate=estimate, ate.sd=std.dev , ate.pval=pvalue, ate.ci.lb=CI.2.5., ate.ci.ub=  CI.97.5., ate.log.std.err=log.std.err)
-
-    res.RR.iptw <- as.data.frame(res.iptw$effect.measures$RR) %>% rename(iptw.long.name=long.name, iptw.estimate=estimate, iptw.sd=std.dev , iptw.pval=pvalue, iptw.ci.lb=CI.2.5., iptw.ci.ub=  CI.97.5., iptw.log.std.err=log.std.err)
-    res.ate.iptw <- as.data.frame(res.iptw$effect.measures$ATE) %>% rename(iptw.ate.long.name=long.name, iptw.ate=estimate, iptw.ate.sd=std.dev , iptw.ate.pval=pvalue, iptw.ate.ci.lb=CI.2.5., iptw.ate.ci.ub=  CI.97.5., iptw.ate.log.std.err=log.std.err)
-
-    res <- cbind(res.RR, res.ate, res.RR.iptw, res.ate.iptw)
-    res$label <- label
-  }
-  if(!is.null(resdf)){
-    res <- bind_rows(resdf, res)
-  }
-
-  options(warn=warn)
-  return(res)
-}
-
-
 logit2prob <- function(logit){
   odds <- exp(logit)
   prob <- odds / (1 + odds)
@@ -726,18 +492,30 @@ run_ltmle_glmnet <- function(d,
 
     if(N_time==11){
 
+      # qform = c(
+      #   insulin_0="Q.kplus1 ~ 1",
+      #   event_dementia_1="Q.kplus1 ~ 1",
+      #   event_dementia_2="Q.kplus1 ~ 1",
+      #   event_dementia_3="Q.kplus1 ~ 1",
+      #   event_dementia_4="Q.kplus1 ~ 1",
+      #   event_dementia_5="Q.kplus1 ~ 1",
+      #   event_dementia_6="Q.kplus1 ~ 1",
+      #   event_dementia_7="Q.kplus1 ~ 1",
+      #   event_dementia_8="Q.kplus1 ~ 1",
+      #   event_dementia_9="Q.kplus1 ~ 1",
+      #   event_dementia_10="Q.kplus1 ~ 1"
+      # )
       qform = c(
-        insulin_0="Q.kplus1 ~ 1",
-        event_dementia_1="Q.kplus1 ~ 1",
-        event_dementia_2="Q.kplus1 ~ 1",
-        event_dementia_3="Q.kplus1 ~ 1",
-        event_dementia_4="Q.kplus1 ~ 1",
-        event_dementia_5="Q.kplus1 ~ 1",
-        event_dementia_6="Q.kplus1 ~ 1",
-        event_dementia_7="Q.kplus1 ~ 1",
-        event_dementia_8="Q.kplus1 ~ 1",
-        event_dementia_9="Q.kplus1 ~ 1",
-        event_dementia_10="Q.kplus1 ~ 1"
+        insulin_1="Q.kplus1 ~ 1",
+        insulin_2="Q.kplus1 ~ 1",
+        insulin_3="Q.kplus1 ~ 1",
+        insulin_4="Q.kplus1 ~ 1",
+        insulin_5="Q.kplus1 ~ 1",
+        insulin_6="Q.kplus1 ~ 1",
+        insulin_7="Q.kplus1 ~ 1",
+        insulin_8="Q.kplus1 ~ 1",
+        insulin_9="Q.kplus1 ~ 1",
+        insulin_10="Q.kplus1 ~ 1"
       )
     }
     if(N_time==4){
