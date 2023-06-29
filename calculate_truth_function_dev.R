@@ -52,40 +52,58 @@ synthesizeDD <- function(coefficients, A_name = "glp1", A=NULL){
 
 
 
-clean_sim_data <- function(d, N_time=10){
-
-  d<- data.table(d)
-
-  for(i in 1:(N_time+1)){
-    j=i+1
-    d[is.na(get(paste0("event_dementia_",i))), (paste0("event_dementia_",j)):=NA]
-    d[get(paste0("event_dementia_",i))==1, (paste0("event_dementia_",j)):=1]
-    d[get(paste0("event_death_",i))==1, (paste0("event_death_",j)):=1]
-    d[get(paste0("event_death_",i))==1, (paste0("event_dementia_",j)):=NA]
-  }
-  return(d)
-}
-
-
-
-
  seed <- 3457347
- nsamp=1000000
+ nsamp=100000
 
+
+   set.seed(seed)
+   u <- synthesizeDD(cc)
+   d <- sim(u, nsamp)
 
   set.seed(seed)
-  u.always <- synthesize_truth(cc, A=1)
-  d.always.full <- sim(u.always, nsamp)
+  u.always <- synthesizeDD(cc, A=1)
+  d.always  <- sim(u.always, nsamp)
 
   set.seed(seed)
-  u.never <- synthesize_truth(cc, A=0)
-  d.never.full <- sim(u.never, nsamp)
+  u.never <- synthesizeDD(cc, A=0)
+  d.never <- sim(u.never, nsamp)
+
+  #This simulated data allows for dementia to develop after death
+  table(d$event_dementia_10)
+  table(d.always$event_dementia_10)
+  table(d.never$event_dementia_10)
+
+  #Set dementia after death to NA
+  clean_sim_data <- function(d, N_time=10){
+
+    d<- data.table(d)
+
+    for(i in 1:(N_time+1)){
+      j=i+1
+      d[is.na(get(paste0("event_dementia_",i))), (paste0("event_dementia_",j)):=NA]
+      d[get(paste0("event_dementia_",i))==1, (paste0("event_dementia_",j)):=1]
+      d[get(paste0("event_death_",i))==1, (paste0("event_death_",j)):=1]
+      d[get(paste0("event_death_",i))==1, (paste0("event_dementia_",j)):=NA]
+    }
+    return(d)
+  }
+
+  d <- clean_sim_data(d)
+  d.always <- clean_sim_data(d.always)
+  d.never <- clean_sim_data(d.never)
+
+  table(d$event_dementia_10)
+  table(d.always$event_dementia_10)
+  table(d.never$event_dementia_10)
 
 
-  tRR10 <- mean(d.always.full$event_dementia_10,na.rm=T)/mean(d.never.full$event_dementia_10,na.rm=T)
-  tRD10 <- mean(d.always.full$event_dementia_10,na.rm=T) - mean(d.never.full$event_dementia_10,na.rm=T)
+  tRR10 <- mean(d.always$event_dementia_10,na.rm=T)/mean(d.never$event_dementia_10,na.rm=T)
+  tRD10 <- mean(d.always$event_dementia_10,na.rm=T) - mean(d.never$event_dementia_10,na.rm=T)
   tRR10
   tRD10
+
+
+  #observed RR and RD
 
 
   d.always <- clean_sim_data(d.always.full, 10)
