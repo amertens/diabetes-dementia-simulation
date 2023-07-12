@@ -10,8 +10,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE, knitr.kable.NA = '')
 
 source(here::here("0_config.R"))
-source(paste0(here::here(),"/0_ltmle_Estimate_update.R"))
-try(source(paste0(here::here(),"/simulation study/0_simulation_functions.R")))
+source(paste0(here::here(),"/functions/0_ltmle_Estimate_update.R"))
+try(source(paste0(here::here(),"/functions/0_simulation_functions.R")))
 
 
 load(paste0(here::here(),"/results/sim_performance_results_protective.Rdata"))
