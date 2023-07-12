@@ -31,7 +31,7 @@ clean_sim_data_no_death <- function(d, N_time){
 
 
 set.seed(12345)
-sim_list <- NULL
+d_wide_list <- NULL
 n<-200
 N_time=10
 
@@ -54,12 +54,12 @@ for(i in 1:n){
 
   d<- clean_sim_data_no_death(d, N_time = 10)
 
-  sim_list[[i]] <- d
+  d_wide_list[[i]] <- d
   gc()
 }
 
 
-saveRDS(sim_list, paste0(here::here(),"/data/simulated_data_no_death_list.RDS"))
+saveRDS(d_wide_list, paste0(here::here(),"/data/simulated_data_no_death_list.RDS"))
 
 
 

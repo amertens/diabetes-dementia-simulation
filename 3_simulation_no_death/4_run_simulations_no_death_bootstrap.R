@@ -8,11 +8,16 @@ source(paste0(here::here(),"/functions/0_simulation_functions.R"))
 
 library(parallel)
 library(doParallel)
-registerDoParallel(cores=64)
+if(detectCores()>64){
+  registerDoParallel(cores=64)
+}else{
+  registerDoParallel(cores=detectCores())
+
+}
 
 gc()
 d_wide_list <- readRDS(file=here("data/simulated_data_no_death_list"))
-d_wide_list <- d_wide_list[1:200]
+d_wide_list <- d_wide_list[200:400]
 gc()
 
 
