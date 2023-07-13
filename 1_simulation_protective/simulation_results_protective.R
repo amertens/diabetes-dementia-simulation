@@ -4,7 +4,7 @@
 
 rm(list=ls())
 source(here::here("0_config.R"))
-source(paste0(here::here(),"/0_ltmle_Estimate_update.R"))
+source(paste0(here::here(),"/functions/0_ltmle_Estimate_update.R"))
 source(paste0(here::here(),"/functions/0_simulation_functions.R"))
 source(paste0(here::here(),"/functions/0_simulation_cleaning_functions.R"))
 library(knitr)
@@ -18,29 +18,7 @@ files <- dir(path=paste0(here::here(),"/sim_res/protective/"), pattern = "*.RDS"
 
 res_protective <- calc_sim_performance(WD=paste0(here::here(),"/sim_res/protective/"), files=files, boot_iter_files=NULL, trueRR=0.5148661, trueRD= -0.009683665, iptw=T )
 res_diff <- res_protective$perf_tab_diff
-res_diff %>% filter(iptw=="TMLE")
 
-res_protective <- calc_sim_performance(WD=paste0(here::here(),"/sim_res/protective/"), files=files, boot_iter_files=NULL, trueRR=0.5148661, trueRD= -0.0354950000, iptw=T )
-res_diff <- res_protective$perf_tab_diff
-res_diff %>% filter(iptw=="TMLE")
-
-
-res_protective <- calc_sim_performance(WD=paste0(here::here(),"/sim_res/protective/"), files=files, boot_iter_files=NULL, trueRR=0.6964379, trueRD= -0.007917, iptw=T )
-res_diff <- res_protective$perf_tab_diff
-res_diff %>% filter(iptw=="TMLE")
-
-
-
-#after death/dementia ordered cleaning
-res_protective <- calc_sim_performance(WD=paste0(here::here(),"/sim_res/protective/"), files=files, boot_iter_files=NULL, trueRR=0.6964379, trueRD= -0.005829, iptw=T )
-res_diff <- res_protective$perf_tab_diff
-res_diff %>% filter(iptw=="TMLE")
-
-
-
-res_protective <- calc_sim_performance(WD=paste0(here::here(),"/sim_res/protective/"), files=files, boot_iter_files=NULL, trueRR=0.6964379, trueRD= -0.010047, iptw=T )
-res_diff <- res_protective$perf_tab_diff
-res_diff %>% filter(iptw=="TMLE")
 
 
 
@@ -54,27 +32,27 @@ res_diff$estimator <- "LASSO"
 res_diff$estimator[grepl("rf",res_diff$filenames)] <- "Random Forest"
 res_diff$estimator[grepl("glm",res_diff$filenames)] <- "GLM"
 res_diff$estimator[grepl("ridge",res_diff$filenames)] <- "Ridge"
-res_diff$estimator[grepl("gbound",res_diff$filenames)] <- "G bound:"
+res_diff$estimator[grepl("gbound",res_diff$filenames)] <- NA
+res_diff$estimator[grepl("gbound_005_9",res_diff$filenames)] <- "G bound: 0.005-0.9"
+res_diff$estimator[grepl("gbound_001",res_diff$filenames)] <- "G bound: 0.001-1"
 res_diff$estimator[grepl("EN",res_diff$filenames)] <- "Elastic Net"
 res_diff$estimator[grepl("AUC",res_diff$filenames)] <- "LASSO, AUC fit"
 res_diff$estimator[grepl("_1se",res_diff$filenames)] <- "LASSO, Lambda: 1se"
 res_diff$estimator[grepl("lasso_prescreen",res_diff$filenames)] <- "GLM, LASSO prescreen"
+res_diff$estimator[grepl("lasso_DetQ_prescreen",res_diff$filenames)] <- "GLM, LASSO prescreen"
+res_diff <- res_diff %>% filter(!is.na(estimator))
 
-res_diff %>% filter(estimator=="GLM", !grepl("iptw", filenames)) %>% select(filenames)
 
 # #remove duplicates /iptw repeats
+res_diff$filenames[res_diff$estimator=="Random Forest"]
 res_diff <- res_diff %>% filter(!filenames %in% c("sim_res_ridge_ic_v3_iptw","sim_res_ridge",
-                                                  "sim_res_Qint_ic",
+                                                  "sim_res_Qint_ic", "sim_res_rf",
                                                   "sim_res_noDetQ_Qint_ic", "sim_res_noDetQ_Qint_tmle",
                                                   "sim_res_DetQ_ic","sim_res_DetQ_ic_v2", "sim_res_DetQ_ic_v5",
                                                   "sim_res_DetQ__ridge_ic_v3_iptw","sim_res_ridge_ic_v3",
                                                   "sim_res_ic"))
 
 
-# filter(!(filenames %in% c("sim_res_noDetQ_Qint_tmle",
-#                           "sim_res_DetQ_ic_v2",
-#                           "sim_res_DetQ_ic_v2_iptw"
-# )),
 
 
 #Set Qint to NA if IPTW

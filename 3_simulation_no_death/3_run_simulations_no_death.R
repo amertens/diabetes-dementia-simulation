@@ -16,14 +16,13 @@ d_wide_list <- d_wide_list[1:200]
 gc()
 
 
+d=d_wide_list[[1]]
+resdf=NULL
+Qint=FALSE
+det.Q =TRUE
+varmethod = "ic"
 
-# d=d_wide_list[[1]]
-# resdf=NULL
-# Qint=FALSE
-# det.Q =TRUE
-# varmethod = "ic"
-#
-# try(res <- run_ltmle_glmnet_no_death(d_wide_list[[1]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "ic"))
+#try(res <- run_ltmle_glmnet_no_death(d_wide_list[[1]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "ic"))
 
 
 #lasso
@@ -46,6 +45,7 @@ resdf_DetQ_ic <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .err
 int.end.time <- Sys.time()
 difftime(int.end.time, int.start.time, units="mins")
 saveRDS(resdf_DetQ_ic, paste0(here::here(),"/sim_res/no_death/sim_res_tmle.RDS"))
+<<<<<<< HEAD
 
 
 
@@ -96,3 +96,5 @@ resdf_DetQ_ic_t5 <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .
 int.end.time <- Sys.time()
 difftime(int.end.time, int.start.time, units="mins")
 saveRDS(resdf_DetQ_ic_t5, paste0(here::here(),"/sim_res/no_death/sim_res_tmle_t5.RDS"))
+=======
+>>>>>>> 03a262802e88eb9eb219977940b13a1b7e7bd288

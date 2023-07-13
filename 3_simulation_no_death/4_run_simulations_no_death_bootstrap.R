@@ -8,11 +8,16 @@ source(paste0(here::here(),"/functions/0_simulation_functions.R"))
 
 library(parallel)
 library(doParallel)
-registerDoParallel(cores=64)
+if(detectCores()>64){
+  registerDoParallel(cores=64)
+}else{
+  registerDoParallel(cores=detectCores())
+
+}
 
 gc()
 d_wide_list <- readRDS(file=here("data/simulated_data_no_death_list"))
-d_wide_list <- d_wide_list[1:200]
+d_wide_list <- d_wide_list[200:400]
 gc()
 
 
@@ -32,8 +37,8 @@ for(i in 1:200){
   res_df <- foreach(j = 1:200, .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
 
     source(here::here("0_config.R"))
-    source(paste0(here::here(),"/functions/0_ltmle_Estimate_update.R"))
-    source(paste0(here::here(),"/functions/0_simulation_functions.R"))
+    source(paste0(here::here(),"/0_ltmle_Estimate_update.R"))
+    source(paste0(here::here(),"/simulation study/0_simulation_functions.R"))
 
     set.seed(j)
     dboot <- d[sample(.N, nrow(d),replace=TRUE)]
@@ -51,5 +56,3 @@ for(i in 1:200){
   saveRDS(res_df, paste0(here::here(),"/sim_res/no_death/bootstrap/sim_res_boot_",i,".RDS"))
 
 }
-
-
