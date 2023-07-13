@@ -70,3 +70,29 @@ resdf_DetQ_ic_t2 <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .
 int.end.time <- Sys.time()
 difftime(int.end.time, int.start.time, units="mins")
 saveRDS(resdf_DetQ_ic_t2, paste0(here::here(),"/sim_res/no_death/sim_res_tmle_t2.RDS"))
+
+
+
+
+
+
+#lasso
+int.start.time <- Sys.time()
+resdf_DetQ_ic_t5 <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
+  res <- NULL
+  try(res <- run_ltmle_glmnet_no_death(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "ic", N_time = 5))
+  return(res)
+}
+int.end.time <- Sys.time()
+difftime(int.end.time, int.start.time, units="mins")
+saveRDS(resdf_DetQ_ic_t5, paste0(here::here(),"/sim_res/no_death/sim_res_ic_t5.RDS"))
+
+int.start.time <- Sys.time()
+resdf_DetQ_ic_t5 <- foreach(i = 1:length(d_wide_list), .combine = 'bind_rows', .errorhandling = 'remove') %dopar% {
+  res <- NULL
+  try(res <- run_ltmle_glmnet_no_death(d_wide_list[[i]], resdf=NULL, Qint=FALSE, det.Q =FALSE, varmethod = "tmle", N_time = 5))
+  return(res)
+}
+int.end.time <- Sys.time()
+difftime(int.end.time, int.start.time, units="mins")
+saveRDS(resdf_DetQ_ic_t5, paste0(here::here(),"/sim_res/no_death/sim_res_tmle_t5.RDS"))

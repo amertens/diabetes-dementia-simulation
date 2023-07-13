@@ -113,6 +113,10 @@ clean_sim_data <- function(d, N_time=10){
 seed <- 3457347
 nsamp=3000000
 
+set.seed(seed)
+u <- synthesizeDD(cc)
+d <- sim(u, nsamp)
+
 
 set.seed(seed)
 u.always <- synthesizeDD.always(cc)
@@ -125,10 +129,18 @@ d.never.full <- sim(u.never, nsamp)
 d.always <- d.always.full
 d.never <- d.never.full
 
-# #get deaths from the never on in case confounding by glp1 effect on comorbidities
-ddeath <- d.never.full %>% select(starts_with("event_death"))
+# # #get deaths from the never on in case confounding by glp1 effect on comorbidities
+# ddeath <- d.never.full %>% select(starts_with("event_death"))
+# d.always.full <- d.always.full %>% select(!starts_with("event_death"))
+# d.always.full <- bind_cols(d.always.full, ddeath)
+
+#get deaths from the never on in case confounding by glp1 effect on comorbidities
+ddeath <- d %>% select(starts_with("event_death"))
+d.never.full <- d.never.full %>% select(!starts_with("event_death"))
 d.always.full <- d.always.full %>% select(!starts_with("event_death"))
+d.never.full <- bind_cols(d.never.full, ddeath)
 d.always.full <- bind_cols(d.always.full, ddeath)
+
 
 d.always <- clean_sim_data(d.always.full, 10)
 d.never <- clean_sim_data(d.never.full, 10)
